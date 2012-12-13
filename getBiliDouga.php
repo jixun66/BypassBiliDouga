@@ -66,7 +66,7 @@ function gT ($S) { return str_replace('"', '\"', $S); }
 srand ((double)microtime()*1000000);
 function getEntry ($str) {
 	global $g_out;
-	preg_match('/cid=(?P<c>[\d]+)&avId=(?P<a>[\d]+)"/i', $str, $matches);
+	preg_match('/cid=(?P<c>[\d]+)&aid=(?P<a>[\d]+)"/i', $str, $matches);
 	// print_r ($str);
 	if (  (!(isset($matches ['c']) && isset($matches ['a']))) || 
 		   !is_numeric($matches ['c']) || !is_numeric($matches ['a']))
