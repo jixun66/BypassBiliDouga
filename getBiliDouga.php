@@ -52,22 +52,16 @@ $db_charset = 'UTF-8';				// 数据库编码
  *   ↓ 代码, 除非你知道你在干什么否则请不要乱改..
  */
 $base  = 'http://bilibili.tv/';
-$g_out = '';
-/*
- *  Func::gS
- *    Return: (g)lobal (S)tring for output
- */
-function gS ()  { return '{ "cid": %d, "avId": %d, "title": "%s", "desc": "%s", "userId": %d, "userName": "%s" }'; }
-/*
- *  Func::gT
- *    Return: (g)lobal s(T)ring replacement
- */
-function gT ($S) { return str_replace('"', '\"', $S); }
+$g_out = ''; // Ensure global is working.
 srand ((double)microtime()*1000000);
+
+function gS ()  { return '{ "cid": %d, "aid": %d, "title": "%s", "desc": "%s", "userId": %d, "userName": "%s" }'; }
+function gT ($S) { return str_replace('"', '\"', $S); }
+function gU ($S, $t) { return ('(?P<' . $t . '>[' . ($S?'\d':'A-Za-z0-9+\/\+=') . ']+)');}
+
 function getEntry ($str) {
 	global $g_out;
 	preg_match('/cid=(?P<c>[\d]+)&aid=(?P<a>[\d]+)"/i', $str, $matches);
-	// print_r ($str);
 	if (  (!(isset($matches ['c']) && isset($matches ['a']))) || 
 		   !is_numeric($matches ['c']) || !is_numeric($matches ['a']))
 			 { return ''; }
@@ -106,7 +100,7 @@ function allopt ($ch) {
 function doLogin () {
 	getLoginDetail ($username, $password);
 	$loginpage = 'https://secure.bilibili.tv/login';
-	$postdata  = 'act=login&gourl=&keeptime=999999999&userid=' . $username . '&pwd=' . $password;
+-	$postdata  = 'act=login&gourl=&keeptime=999999999&userid=' . $username . '&pwd=' . $password;
 	$ch = curl_init();
 	curl_setopt ($ch, CURLOPT_URL, $loginpage);
 	curl_setopt ($ch, CURLOPT_POSTFIELDS, $postdata);
@@ -141,7 +135,16 @@ if ($usecache) {
 	}
 	$row = mysql_fetch_array($result);
 	if (isset($row[0])) {
-		preg_match('/(?P<c>[\d]+)-(?P<a>[\d]+)-(?P<t>[A-Za-z0-9+\/]+)-(?P<d>[A-Za-z0-9+\/]+)-(?P<i>[\d]+)-(?P<u>[A-Za-z0-9+\/]+)/i', base64_decode($row ['rep']), $matches);
+		$m = sprintf ('/%s-%s-%s-%s-%s-%s/i',
+			gU(true , 'c'), 
+			gU(true , 'a'), 
+			gU(false, 't'), 
+			gU(false, 'd'), 
+			gU(true , 'i'), 
+			gU(false, 'u'));
+
+		preg_match($m, base64_decode($row ['rep']), $matches);
+
 		echo (sprintf(gS(), 
 				@$matches ['c'],
 				@$matches ['a'],
